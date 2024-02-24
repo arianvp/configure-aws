@@ -1,0 +1,33 @@
+name: Configure AWS SDK with Github Actions ID Token
+description: |
+  Configure AWS with Github Actions ID Token by 
+  setting AWS_WEB_IDENTITY_TOKEN_FILE environment variable
+inputs:
+  aws-region:
+    description: 'AWS region. Sets AWS_DEFAULT_REGION and AWS_REGION environment variables'
+    required: true
+  aws-role-arn:
+    description: 'AWS role ARN to assume. Sets AWS_ROLE_ARN environment variable'
+    required: true
+  aws-role-session-name:
+    description: 'AWS session name. Sets AWS_ROLE_SESSION_NAME environment variable'
+    required: false
+    default: 'GithubActions'
+  id-token-audience:
+    description: 'The aud claim in the ID token.'
+    default: sts.amazonaws.com
+    required: false
+outputs:
+  aws-web-identity-token-file:
+    description: 'Path to the AWS Web Identity Token file. The AWS_WEB_IDENTITY_TOKEN_FILE environment variable is also set to this value'
+    value: ${{ steps.get-id-token.outputs.aws-web-identity-token-file }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Get ID Token
+      id: get-id-token
+      run: |
+        AWS_WEB_IDENTITY_TOKEN_FILE=$(mktemp)
+        curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=${{ inputs.id-token-audience }}" -o $AWS_WEB_IDENTITY_TOKEN_FILE
+        echo "aws-web-identity-token-file=$AWS_WEB_IDENTITY_TOKEN_FILE" >> $GITHUB_OUTPUT
+        echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> $GITHUB_ENV
