@@ -27,7 +27,7 @@ jobs:
       with:
         aws-region: us-west-2
         aws-role-arn: arn:aws:iam::123456789012:role/deploy-production
-      run: aws sts get-caller-identity
+      run: aws s3 cp index.html s3://example-bucket
 ```
 A minimal example of configuring AWS to use OpenID Connect with Github Actions is:
 
