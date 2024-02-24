@@ -7,6 +7,9 @@ jobs:
   setup-role-and-get-caller-identity:
     name: Setup role and get caller identity
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: "./"
