@@ -60,4 +60,6 @@ runs:
         sudo_if_needed aws configure set web_identity_token_file ${{ steps.get-id-token.outputs.web-identity-token-file }} --profile ${{ inputs.profile }}
         sudo_if_needed aws configure set role_arn ${{ inputs.role-arn }} --profile ${{ inputs.profile }}
         sudo_if_needed aws configure set role_session_name ${{ inputs.role-session-name }} --profile ${{ inputs.profile }}
-        sudo_if_needed aws configure set region ${{ inputs.region }} --profile ${{ inputs.profile }}
+        if [ -n "${{ inputs.region }}" ]; then
+          sudo_if_needed aws configure set region ${{ inputs.region }} --profile ${{ inputs.profile }}
+        fi
