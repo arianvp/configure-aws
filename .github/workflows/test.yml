@@ -1,6 +1,8 @@
 on:
   pull_request:
   push:
+    branches:
+      - main
 jobs:
   setup-role-and-get-caller-identity:
     name: Setup role and get caller identity
