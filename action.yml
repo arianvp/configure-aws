@@ -5,7 +5,7 @@ description: |
 inputs:
   aws-region:
     description: 'AWS region. Sets AWS_DEFAULT_REGION and AWS_REGION environment variables'
-    required: true
+    required: false
   aws-role-arn:
     description: 'AWS role ARN to assume. Sets AWS_ROLE_ARN environment variable'
     required: true
@@ -24,6 +24,18 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Set region
+      if: ${{ inputs.aws-region }}
+      run: |
+        echo "AWS_DEFAULT_REGION=${{ inputs.aws-region }}" >> $GITHUB_ENV
+        echo "AWS_REGION=${{ inputs.aws-region }}" >> $GITHUB_ENV
+    - name: Set role ARN
+      run: |
+        echo "AWS_ROLE_ARN=${{ inputs.aws-role-arn }}" >> $GITHUB_ENV
+    - name: Set role session name
+      run: |
+        echo "AWS_ROLE_SESSION_NAME=${{ inputs.aws-role-session-name }}" >> $GITHUB_ENV
+
     - name: Get ID Token
       id: get-id-token
       run: |

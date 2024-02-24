@@ -2,9 +2,24 @@ on:
   pull_request:
   push:
 jobs:
-  assume:
+  setup-role-and-get-caller-identity:
+    name: Setup role and get caller identity
     runs-on: ubuntu-latest
     steps:
       - uses: action@checkout@v4
       - uses: ./.
+        with:
+          aws-role-arn: arn:aws:iam::123456789012:role/assume-role
+      - run: aws sts get-caller-identity
+  setup-role-and-region:
+    name:  Setup role and set up region
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.
+        with:
+          aws-role-arn: arn:aws:iam::123456789012:role/assume-role
+          aws-region: us-west-2
+      - run: aws sts get-caller-identity
+      - run: aws ec2 describe-regions
           
