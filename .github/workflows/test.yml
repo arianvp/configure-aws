@@ -15,4 +15,5 @@ jobs:
       - uses: "./"
         with:
           aws-role-arn: arn:aws:iam::123456789012:role/assume-role
+      - run: apt install -y awscli2
       - run: aws sts get-caller-identity
