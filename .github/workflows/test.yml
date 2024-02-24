@@ -6,6 +6,7 @@ jobs:
     name: Setup role and get caller identity
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: "./"
         with:
           aws-role-arn: arn:aws:iam::123456789012:role/assume-role
