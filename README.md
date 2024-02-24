@@ -77,6 +77,7 @@ data "aws_iam_policy_document" "assume_github" {
 resource "aws_iam_role" "github" {
   name               = "deploy-production"
   assume_role_policy = data.aws_iam_policy_document.assume_github.json
+  # TODO: use a more restrictive policy
   attach_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
 }
 
