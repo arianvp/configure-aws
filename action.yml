@@ -11,7 +11,7 @@ inputs:
   role-session-name:
     description: AWS session name. Sets AWS_ROLE_SESSION_NAME environment variable
     required: false
-      default: GithubActions
+    default: GithubActions
   profile:
     description: The AWS profile to write the configuration to. Writes to the default profile if not set
     required: false
