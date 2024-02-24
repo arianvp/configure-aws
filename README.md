@@ -3,6 +3,14 @@ A Github Action that configures the AWS SDK to use Github Actions ID Token for a
 
 ## Why use this action instead of `aws-actions/configure-aws-credentials`?
 
+The  `aws-actions/configure-aws-credentials` is a swiss army knife for
+configuring AWS credentials. However you really only should be using [OpenID
+Connect](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers)
+for talking to AWS as it's the most secure way to do so. This action _only_
+supports the secure usecase and nothing else.  Furthermore this action
+automatically refreshes the temporary credentials when they expire whilst the
+`aws-actions/configure-aws-credentials` does not.
+
 The `aws-actions/configure-aws-credentials` action calls `sts:AssumeRoleWithWebIdentity`
 once and sets environment variables to use the resulting temporary credential.
 The problem is in the word **temporary**.  These credentials expire after the default
