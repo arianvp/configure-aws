@@ -3,13 +3,13 @@ description: |
   Configure AWS with Github Actions ID Token using the the web_identity_token_file configuration option.
 inputs:
   region:
-    description: AWS region. Sets AWS_DEFAULT_REGION and AWS_REGION environment variables
+    description: AWS region. 
     required: false
   role-arn:
-    description: AWS role ARN to assume. Sets AWS_ROLE_ARN environment variable
+    description: AWS role ARN to assume. 
     required: true
   role-session-name:
-    description: AWS session name. Sets AWS_ROLE_SESSION_NAME environment variable
+    description: AWS session name.
     required: false
     default: GithubActions
   profile:
