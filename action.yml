@@ -40,9 +40,10 @@ runs:
         echo "AWS_ROLE_SESSION_NAME=${{ inputs.aws-role-session-name }}" >> $GITHUB_ENV
 
     - name: Check if id-token permission is set
+      shell: bash
       run: |
         if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
-          echo "::error file=${{github.workflow_ref }} You forgot to add the `id-token: write` permission to the job. Please add it to the job: ${{github.job}}"
+          echo "::error file=${{ github.workflow_ref }} You forgot to add the `id-token: write` permission to the job. Please add it to the job: ${{github.job}}"
           exit 1
         fi
     - name: Get ID Token
