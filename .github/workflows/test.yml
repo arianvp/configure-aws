@@ -5,5 +5,5 @@ jobs:
   assume:
     runs-on: ubuntu-latest
     steps:
-      - uses: .
+      - uses: ./.
           
