@@ -1,0 +1,9 @@
+on:
+  pull_request:
+  push:
+jobs:
+  assume:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: .
+          
