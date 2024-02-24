@@ -1,27 +1,7 @@
 # configure-aws
+
 A Github Action that configures the AWS SDK to use Github Actions ID Token for authentication
-
-## Why use this action instead of `aws-actions/configure-aws-credentials`?
-
-The  `aws-actions/configure-aws-credentials` is a swiss army knife for
-configuring AWS credentials. However you really only should be using [OpenIDConnect][OpenID Connect]
-for talking to AWS as it's the most secure way to do so. This action _only_
-supports the secure usecase and nothing else.  Furthermore this action
-automatically refreshes the temporary credentials when they expire whilst the
-`aws-actions/configure-aws-credentials` does not.
-
-The `aws-actions/configure-aws-credentials` action calls `sts:AssumeRoleWithWebIdentity`
-once and sets environment variables to use the resulting temporary credential.
-The problem is in the word **temporary**.  These credentials expire after the default
-expiry time of your IAM Role. This means that if you have a step that takes longer
-than the expiry time, your action will randomly start failing.
-
-This action does not directly call `sts:AssumeRoleWithWebIdentity` to get
-Instead, it configures the AWS SDK by setting the `AWS_WEB_IDENTITY_TOKEN_FILE`,
-`AWS_ROLE_ARN`, and `AWS_ROLE_SESSION_NAME` environment variables.  The AWS SDK
-will then take care of calling `sts:AssumeRoleWithWebIdentity` to get temporary
-credentials when it needs them and will automatically refresh the temporary
-credentials when they expire.
+and automatically refreshes the temporary credentials when they expire.
 
 ## Usage
 
@@ -47,7 +27,7 @@ jobs:
       with:
         aws-region: us-west-2
         aws-role-arn: arn:aws:iam::123456789012:role/deploy-production
-      run: aws sts get-caller-identity
+      run: aws s3 cp index.html s3://example-bucket
 ```
 A minimal example of configuring AWS to use OpenID Connect with Github Actions is:
 
@@ -77,7 +57,7 @@ data "aws_iam_policy_document" "assume_github" {
 resource "aws_iam_role" "github" {
   name               = "deploy-production"
   assume_role_policy = data.aws_iam_policy_document.assume_github.json
-  # TODO: use a more restrictive policy
+  # FIXME: Probably use a more restrictive policy
   attach_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
 }
 
@@ -85,3 +65,25 @@ resource "aws_iam_role" "github" {
 ```
 
 [OpenIDConnect]: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers
+
+## Why use this action instead of `aws-actions/configure-aws-credentials`?
+
+The  `aws-actions/configure-aws-credentials` is a swiss army knife for
+configuring AWS credentials. However you really only should be using [OpenIDConnect]
+for talking to AWS as it's the most secure way to do so. This action _only_
+supports the secure usecase and nothing else.  Furthermore this action
+automatically refreshes the temporary credentials when they expire whilst the
+`aws-actions/configure-aws-credentials` does not.
+
+The `aws-actions/configure-aws-credentials` action calls `sts:AssumeRoleWithWebIdentity`
+once and sets environment variables to use the resulting temporary credential.
+The problem is in the word **temporary**.  These credentials expire after the default
+expiry time of your IAM Role. This means that if you have a step that takes longer
+than the expiry time, your action will randomly start failing.
+
+This action does not directly call `sts:AssumeRoleWithWebIdentity` to get
+Instead, it configures the AWS SDK by setting the `AWS_WEB_IDENTITY_TOKEN_FILE`,
+`AWS_ROLE_ARN`, and `AWS_ROLE_SESSION_NAME` environment variables.  The AWS SDK
+will then take care of calling `sts:AssumeRoleWithWebIdentity` to get temporary
+credentials when it needs them and will automatically refresh the temporary
+credentials when they expire.

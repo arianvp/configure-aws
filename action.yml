@@ -1,33 +1,65 @@
 name: Configure AWS SDK with Github Actions ID Token
 description: |
-  Configure AWS with Github Actions ID Token by 
-  setting AWS_WEB_IDENTITY_TOKEN_FILE environment variable
+  Configure AWS with Github Actions ID Token using the the web_identity_token_file configuration option.
 inputs:
-  aws-region:
-    description: 'AWS region. Sets AWS_DEFAULT_REGION and AWS_REGION environment variables'
-    required: true
-  aws-role-arn:
-    description: 'AWS role ARN to assume. Sets AWS_ROLE_ARN environment variable'
-    required: true
-  aws-role-session-name:
-    description: 'AWS session name. Sets AWS_ROLE_SESSION_NAME environment variable'
+  region:
+    description: AWS region. Sets AWS_DEFAULT_REGION and AWS_REGION environment variables
     required: false
-    default: 'GithubActions'
-  id-token-audience:
-    description: 'The aud claim in the ID token.'
+  role-arn:
+    description: AWS role ARN to assume. Sets AWS_ROLE_ARN environment variable
+    required: true
+  role-session-name:
+    description: AWS session name. Sets AWS_ROLE_SESSION_NAME environment variable
+    required: false
+    default: GithubActions
+  profile:
+    description: The AWS profile to write the configuration to. Writes to the default profile if not set
+    required: false
+    default: default
+  audience:
+    description: The aud claim in the ID token. Should match a value in client_id_list in the AWS OIDC provider configuration.
     default: sts.amazonaws.com
     required: false
+  user:
+    description: |
+      Set the AWS configuration for a specific user. If not set, the configuration will be set for the current user.
+      Useful if you want to set AWS credentials for a daemon running as another user on the same machine.
+      Example: nix-daemon does substitution for nix and needs access to S3.
+    required: false
 outputs:
-  aws-web-identity-token-file:
-    description: 'Path to the AWS Web Identity Token file. The AWS_WEB_IDENTITY_TOKEN_FILE environment variable is also set to this value'
-    value: ${{ steps.get-id-token.outputs.aws-web-identity-token-file }}
+  web-identity-token-file:
+    description: 'Path to the AWS Web Identity Token file'
+    value: ${{ steps.get-id-token.outputs.web-identity-token-file }}
 runs:
   using: 'composite'
   steps:
+    - name: Check if id-token permission is set
+      shell: bash
+      run: |
+        if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+          echo "::error file=${{ github.workflow }},line=1::You forgot to add the "id-token: write" permission to the job or workflow. Please add it to the workflow ${{github.workflow}} for the job ${{github.job}}."
+          exit 1
+        fi
     - name: Get ID Token
       id: get-id-token
+      shell: bash
       run: |
         AWS_WEB_IDENTITY_TOKEN_FILE=$(mktemp)
         curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=${{ inputs.id-token-audience }}" -o $AWS_WEB_IDENTITY_TOKEN_FILE
-        echo "aws-web-identity-token-file=$AWS_WEB_IDENTITY_TOKEN_FILE" >> $GITHUB_OUTPUT
-        echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> $GITHUB_ENV
+        echo "web-identity-token-file=$AWS_WEB_IDENTITY_TOKEN_FILE" >> $GITHUB_OUTPUT
+    - name: Write config file
+      shell: bash
+      run: |
+        sudo_if_needed() {
+          if [ -n "${{ inputs.user }}" ]; then
+            sudo -i -u ${{ inputs.user }} $@
+          else
+            $@
+          fi
+        }
+        sudo_if_needed aws configure set web_identity_token_file ${{ steps.get-id-token.outputs.web-identity-token-file }} --profile ${{ inputs.profile }}
+        sudo_if_needed aws configure set role_arn ${{ inputs.role-arn }} --profile ${{ inputs.profile }}
+        sudo_if_needed aws configure set role_session_name ${{ inputs.role-session-name }} --profile ${{ inputs.profile }}
+        if [ -n "${{ inputs.region }}" ]; then
+          sudo_if_needed aws configure set region ${{ inputs.region }} --profile ${{ inputs.profile }}
+        fi
