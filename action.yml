@@ -44,7 +44,7 @@ runs:
       run: |
       
         if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
-          echo "::error file=${{ github.workflow }},line=1::You forgot to add the "id-token: write" permission to the job or workflow. Please add it to the job ${{github.job}} or to the workflow ${{github.workflow}} in ${{github.workflow_ref}}"
+          echo "::error file=${{ github.workflow }},line=1::You forgot to add the "id-token: write" permission to the job or workflow. Please add it to the workflow ${{github.workflow}} for the job ${{github.job}}."
           exit 1
         fi
     - name: Get ID Token
