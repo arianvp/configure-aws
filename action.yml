@@ -43,7 +43,7 @@ runs:
       shell: bash
       run: |
         if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
-          echo "::error file=${{ github.workflow_ref }} You forgot to add the `id-token: write` permission to the job. Please add it to the job: ${{github.job}}"
+          echo "::error file=${{ github.workflow_ref }}line=1::You forgot to add the `id-token: write` permission to the job. Please add it to the job: ${{github.job}}"
           exit 1
         fi
     - name: Get ID Token
