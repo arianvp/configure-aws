@@ -26,18 +26,22 @@ runs:
   steps:
     - name: Set region
       if: ${{ inputs.aws-region }}
+      shell: bash
       run: |
         echo "AWS_DEFAULT_REGION=${{ inputs.aws-region }}" >> $GITHUB_ENV
         echo "AWS_REGION=${{ inputs.aws-region }}" >> $GITHUB_ENV
     - name: Set role ARN
+      shell: bash
       run: |
         echo "AWS_ROLE_ARN=${{ inputs.aws-role-arn }}" >> $GITHUB_ENV
     - name: Set role session name
+      shell: bash
       run: |
         echo "AWS_ROLE_SESSION_NAME=${{ inputs.aws-role-session-name }}" >> $GITHUB_ENV
 
     - name: Get ID Token
       id: get-id-token
+      shell: bash
       run: |
         AWS_WEB_IDENTITY_TOKEN_FILE=$(mktemp)
         curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=${{ inputs.id-token-audience }}" -o $AWS_WEB_IDENTITY_TOKEN_FILE
