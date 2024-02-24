@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: action@checkout@v4
-      - uses: ./.
+      - uses: ./action.yml
         with:
           aws-role-arn: arn:aws:iam::123456789012:role/assume-role
       - run: aws sts get-caller-identity
@@ -15,8 +15,8 @@ jobs:
     name:  Setup role and set up region
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: ./.
+      - uses: actions/checkout@v4
+      - uses: ./action.yml
         with:
           aws-role-arn: arn:aws:iam::123456789012:role/assume-role
           aws-region: us-west-2
