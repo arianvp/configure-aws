@@ -13,11 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: "./"
+        name: Configure AWS for root
         with:
           role-arn: arn:aws:iam::123456789012:role/read-cache
           role-session-name: nix-daemon
           user: root
       - uses: "./"
+        name: Configure AWS
         with:
           role-arn: arn:aws:iam::123456789012:role/write-cache
           role-session-name: nix
