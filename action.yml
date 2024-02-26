@@ -26,10 +26,6 @@ inputs:
       Useful if you want to set AWS credentials for a daemon running as another user on the same machine.
       Example: nix-daemon does substitution for nix and needs access to S3.
     required: false
-outputs:
-  web-identity-token-file:
-    description: 'Path to the AWS Web Identity Token file'
-    value: ${{ steps.get-id-token.outputs.web-identity-token-file }}
 runs:
   using: 'composite'
   steps:
