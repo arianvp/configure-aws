@@ -3,6 +3,9 @@
 A Github Action that configures the AWS SDK to use Github Actions ID Token for authentication
 and automatically refreshes the temporary credentials when they expire, with support for multiple profiles and UNIX users.
 
+Use this if you for example have an S3 copy task that takes longer than the max role duration!
+Example: Using S3 as a cache for  your nix builds.
+
 ## Usage
 
 Please refer to the documentation in [Configuring OpenID Connect in Amazon Web Services](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
@@ -166,6 +169,7 @@ expiry time of your IAM Role. This means that if you have a step that takes long
 than the expiry time, your action will randomly start failing.
 
 This action does not directly call `sts:AssumeRoleWithWebIdentity` to get
+credentials.
 Instead, it configures the AWS SDK by setting the `web_identity_token_file`,
 `role_arn`, and `role_session_name` settings in `.aws/config`.  The AWS SDK
 will then take care of calling `sts:AssumeRoleWithWebIdentity` to get temporary
