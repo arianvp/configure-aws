@@ -60,8 +60,6 @@ resource "aws_iam_role" "github" {
   # FIXME: Probably use a more restrictive policy
   attach_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess"]
 }
-
-
 ```
 
 [OpenIDConnect]: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers
@@ -145,6 +143,16 @@ jobs:
       - run: AWS_PROFILE=terraform-plan terraform plan
       - run: AWS_PROFILE=terraform-apply terraform apply
 ```
+## Inputs
+
+| Input              | Description                                                                                                                                                        | Required | Default            |
+|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------------------|
+| `region`           | AWS region.                                                                                                                                                        | No       |                    |
+| `role-arn`         | AWS role ARN to assume.                                                                                                                                            | Yes      |                    |
+| `role-session-name`| AWS session name.                                                                                                                                                  | No       | `GithubActions`    |
+| `profile`          | The AWS profile to write the configuration to. Writes to the default profile if not set                                                                            | No       | `default`          |
+| `audience`         | The aud claim in the ID token. Should match a value in client_id_list in the AWS OIDC provider configuration.                                                      | No       | `sts.amazonaws.com`|
+| `user`             | Set the AWS configuration for a specific user. If not set, the configuration will be set for the current user. Example: nix-daemon does substitution for nix and needs access to S3. | No       |                    |
 
 
 ## Why use this action instead of `aws-actions/configure-aws-credentials`?
