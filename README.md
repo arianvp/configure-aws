@@ -66,6 +66,53 @@ resource "aws_iam_role" "github" {
 
 [OpenIDConnect]: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers
 
+## Extra AWS Credentials for multiple UNIX users / Daemons
+
+There are scenarios where your Github Workflow might need multiple AWS Credentials.  For example if you have 
+a daemon running that is responsible for fetching cached artifacts in the background.  One example of this
+is Nix which installs a `nix-daemon` which is responsible for substituting cached artifacts.
+Here is an example below that uses two roles to use an S3 bucket as a nix cache. [You can also view the full example here](https://github.com/arianvp/nix-s3-demo)
+
+```yaml
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      S3_BUCKET: "nix-s3-demo-1"
+      ACCOUNT_ID: "123456123456"
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "$NIX_PRIVATE_KEY" > /tmp/nix-secret-key
+        env:
+          NIX_PRIVATE_KEY: ${{ secrets.NIX_PRIVATE_KEY }}
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Set up AWS Credentials for current user
+        uses: arianvp/configure-aws@main
+        with:
+          role-arn: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/write-cache
+          region: eu-central-1
+      - name: Set up AWS credentials for nix-daemon 
+        uses: arianvp/configure-aws@main
+        with:
+          role-arn: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/read-cache
+          region: eu-central-1
+          role-session-name: GithubActionsNixDaemon
+          user: root
+      # Substitution happens by nix-daemon root user and thus uses the read-cache role
+      - run: nix build --extra-trusted-public-keys ${{ secrets.NIX_PUBLIC_KEY }} --extra-substituters 's3://${{ env.S3_BUCKET }}'
+      - run: nix store sign --key-file /tmp/nix-secret-key
+      # Copying happens by current user and thus uses the write-cache role
+      - run: nix copy --to 's3://${{ env.S3_BUCKET }}'
+```
+
 ## Why use this action instead of `aws-actions/configure-aws-credentials`?
 
 The  `aws-actions/configure-aws-credentials` is a swiss army knife for
@@ -73,7 +120,8 @@ configuring AWS credentials. However you really only should be using [OpenIDConn
 for talking to AWS as it's the most secure way to do so. This action _only_
 supports the secure usecase and nothing else.  Furthermore this action
 automatically refreshes the temporary credentials when they expire whilst the
-`aws-actions/configure-aws-credentials` does not.
+`aws-actions/configure-aws-credentials` does not. Also this action supports
+muliple profiles and users whilst the upstream action does not.
 
 The `aws-actions/configure-aws-credentials` action calls `sts:AssumeRoleWithWebIdentity`
 once and sets environment variables to use the resulting temporary credential.
@@ -82,8 +130,14 @@ expiry time of your IAM Role. This means that if you have a step that takes long
 than the expiry time, your action will randomly start failing.
 
 This action does not directly call `sts:AssumeRoleWithWebIdentity` to get
-Instead, it configures the AWS SDK by setting the `AWS_WEB_IDENTITY_TOKEN_FILE`,
-`AWS_ROLE_ARN`, and `AWS_ROLE_SESSION_NAME` environment variables.  The AWS SDK
+Instead, it configures the AWS SDK by setting the `web_identity_token_file`,
+`role_arn`, and `role_session_name` settings in `.aws/config`.  The AWS SDK
 will then take care of calling `sts:AssumeRoleWithWebIdentity` to get temporary
 credentials when it needs them and will automatically refresh the temporary
-credentials when they expire.
+credentials when they expire.  This is useful if you have jobs that take longer
+than an hour (i.e. the default max role duration time) as the credential will
+automatically be renwewed. 
+
+Due to this action not setting environment variables, but writing a config file.
+multiple profiles are supported and a single workflow can use multiple AWS IAM
+roles in parallel.
