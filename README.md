@@ -1,7 +1,7 @@
 # configure-aws-action
 
 A Github Action that configures the AWS SDK to use Github Actions ID Token for authentication
-and automatically refreshes the temporary credentials when they expire.
+and automatically refreshes the temporary credentials when they expire, with support for multiple profiles and UNIX users.
 
 ## Usage
 
