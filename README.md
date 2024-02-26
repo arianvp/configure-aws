@@ -69,14 +69,11 @@ resource "aws_iam_role" "github" {
 There are scenarios where your Github Workflow might need multiple AWS Credentials.  For example if you have 
 a daemon running that is responsible for fetching cached artifacts in the background.  One example of this
 is Nix which installs a `nix-daemon` which is responsible for substituting cached artifacts.
-Here is an example below that uses two roles to use an S3 bucket as a nix cache. [You can also view the full example here](https://github.com/arianvp/nix-s3-demo)
+Here is an example below that uses two roles to use an S3 bucket as a nix cache. [You can also view and clone the full example here](https://github.com/arianvp/nix-s3-demo)
 
 ```yaml
 on:
   push:
-    branches:
-      - main
-  pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -84,31 +81,28 @@ jobs:
       contents: read
       id-token: write
     env:
-      S3_BUCKET: "nix-s3-demo-1"
-      ACCOUNT_ID: "123456123456"
+      CACHE_BUCKET: "s3://${{ vars.CACHE_BUCKET }}?region=${{ vars.CACHE_BUCKET_REGION }}"
     steps:
       - uses: actions/checkout@v4
-      - run: echo "$NIX_PRIVATE_KEY" > /tmp/nix-secret-key
+      - run: echo "$NIX_SECRET_KEY" > /tmp/nix-secret-key
         env:
-          NIX_PRIVATE_KEY: ${{ secrets.NIX_PRIVATE_KEY }}
+          NIX_SECRET_KEY: ${{ secrets.NIX_SECRET_KEY }}
       - uses: DeterminateSystems/nix-installer-action@main
       - name: Set up AWS Credentials for current user
         uses: arianvp/configure-aws-action@main
         with:
-          role-arn: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/write-cache
+          role-arn: ${{ vars.WRITE_CACHE_ROLE_ARN }}
           region: eu-central-1
       - name: Set up AWS credentials for nix-daemon 
         uses: arianvp/configure-aws-action@main
         with:
-          role-arn: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/read-cache
+          role-arn: ${{ vars.READ_CACHE_ROLE_ARN }}
           region: eu-central-1
           role-session-name: GithubActionsNixDaemon
           user: root
-      # Substitution happens by nix-daemon root user and thus uses the read-cache role
-      - run: nix build --extra-trusted-public-keys ${{ secrets.NIX_PUBLIC_KEY }} --extra-substituters 's3://${{ env.S3_BUCKET }}'
-      - run: nix store sign --key-file /tmp/nix-secret-key
-      # Copying happens by current user and thus uses the write-cache role
-      - run: nix copy --to 's3://${{ env.S3_BUCKET }}'
+      - run: nix build --extra-trusted-public-keys '${{ secrets.NIX_PUBLIC_KEY }}' --extra-substituters '${{ env.CACHE_BUCKET }}'
+      - run: nix store sign --key-file  /tmp/nix-secret-key
+      - run: nix copy --to '${{ env.CACHE_BUCKET }}'
 ```
 
 ## Multiple profiles
