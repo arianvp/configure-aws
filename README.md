@@ -113,6 +113,40 @@ jobs:
       - run: nix copy --to 's3://${{ env.S3_BUCKET }}'
 ```
 
+## Multiple profiles
+
+This action supports setting up multiple profiles. This can be useful for when you have different steps
+that require a different role.
+
+```yaml
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arianvp/configure-aws-action@main
+        with:
+          role-arn: arn:aws:iam::1234561234:role/terraform-plan
+          profile: terraform-plan
+          region: eu-central-1
+      - uses: arianvp/configure-aws-action@main
+        with:
+          role-arn: arn:aws:iam::1234561234:role/terraform-apply
+          profile: terraform-apply
+          region: eu-central-1
+      - run: AWS_PROFILE=terraform-plan terraform plan
+      - run: AWS_PROFILE=terraform-apply terraform apply
+```
+
+
 ## Why use this action instead of `aws-actions/configure-aws-credentials`?
 
 The  `aws-actions/configure-aws-credentials` is a swiss army knife for
