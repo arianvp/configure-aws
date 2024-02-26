@@ -1,4 +1,4 @@
-# configure-aws
+# configure-aws-action
 
 A Github Action that configures the AWS SDK to use Github Actions ID Token for authentication
 and automatically refreshes the temporary credentials when they expire.
@@ -23,7 +23,7 @@ jobs:
       id-token: write
     steps:
     - name: Configure AWS
-      uses: aws-actions/configure-aws@main
+      uses: arianvp/configure-aws-action@main
       with:
         aws-region: us-west-2
         aws-role-arn: arn:aws:iam::123456789012:role/deploy-production
@@ -95,12 +95,12 @@ jobs:
           NIX_PRIVATE_KEY: ${{ secrets.NIX_PRIVATE_KEY }}
       - uses: DeterminateSystems/nix-installer-action@main
       - name: Set up AWS Credentials for current user
-        uses: arianvp/configure-aws@main
+        uses: arianvp/configure-aws-action@main
         with:
           role-arn: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/write-cache
           region: eu-central-1
       - name: Set up AWS credentials for nix-daemon 
-        uses: arianvp/configure-aws@main
+        uses: arianvp/configure-aws-action@main
         with:
           role-arn: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/read-cache
           region: eu-central-1
