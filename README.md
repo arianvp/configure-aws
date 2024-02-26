@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "assume_github" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:arianvp/configure-aws:environment:production"]
+      values   = ["repo:arianvp/my-repo:environment:production"]
     }
   }
 }
